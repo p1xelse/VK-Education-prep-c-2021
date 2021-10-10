@@ -1,0 +1,1 @@
+int is_simple_num(int num);
