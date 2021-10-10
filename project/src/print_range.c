@@ -1,14 +1,10 @@
 #include "print_range.h"
 
-int print_range(int n)
-{   
-    if (n == 1)
-    {
+int print_range(int n) {
+    if (n == 1) {
         printf("%d", n);
         return 1;
-    }
-    else
-    {
+    } else {
         if (n  <= 0)
             printf(" %d", print_range(n + 1) - 1);
         else
@@ -16,5 +12,4 @@ int print_range(int n)
 
         return n;
     }
-
 }
