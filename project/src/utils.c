@@ -3,7 +3,8 @@
 #include <stddef.h>
 
 size_t timer_from(int from) {
-    int counter = 0;
+    size_t counter = 0;
+
     for (int i = from; i >= 0; --i) {
         ++counter;
         printf(i == 0 ? "%d\n" : "%d ", i);

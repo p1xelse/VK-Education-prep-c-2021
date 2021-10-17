@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "print_range.h"
 
 int print_range(int n) {
