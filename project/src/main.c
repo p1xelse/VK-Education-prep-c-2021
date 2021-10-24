@@ -21,6 +21,7 @@ int main(void) {
   while (scanf("%d", &choice) != -1) {
     switch (choice) {
       case 1:
+
         ptr = fopen(FILENAME_REC, "r+");
 
         if (ptr == NULL) {
@@ -35,6 +36,7 @@ int main(void) {
         break;
 
       case 2:
+
         ptr = fopen(FILENAME_TRANS, "r+");
 
         if (ptr == NULL) {
@@ -68,9 +70,9 @@ int main(void) {
         break;
     }
 
-    // printf("%s",
-    //        "please enter action\n1 enter data client:\n2 enter data "
-    //        "transaction:\n3 update base\n4 exit\n");
+    printf("%s",
+           "please enter action\n1 enter data client:\n2 enter data "
+           "transaction:\n3 update base\n");
   }
   return 0;
 }
