@@ -271,24 +271,26 @@ Matrix* adj(const Matrix* matrix) {
   }
   Matrix* tmp = transp(adj);
   free_matrix(adj);
-  // print_matrix(adj);
   return tmp;
 }
 
 Matrix* inv(const Matrix* matrix) {
-  Matrix* inv = create_matrix(matrix->n, matrix->m);
-  if (inv == NULL) return NULL;
+  if (matrix == NULL) return NULL;
+
+  Matrix* inv_m = create_matrix(matrix->n, matrix->m);
+
+  if (inv_m == NULL) return NULL;
 
   if (matrix->n == 1) {
-    inv->data[0][0] = 1;
-    return inv;
+    inv_m->data[0][0] = 1 / matrix->data[0][0];
+    return inv_m;
   }
 
   double val = 1;
   det(matrix, &val);
   Matrix* adj_m = adj(matrix);
   Matrix* tmp = mul_scalar((const Matrix*)adj_m, 1 / val);
-  free_matrix(inv);
+  free_matrix(inv_m);
   free_matrix(adj_m);
   return tmp;
 }
