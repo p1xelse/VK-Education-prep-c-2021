@@ -12,6 +12,7 @@ void free_pointers_arr(double** data, int n) {
 }
 
 double** allocate_matrix_data(int n, int m) {
+  if (m == 0 || n == 0) return NULL;
   double** data = calloc(n, sizeof(double*));
 
   if (!data) return NULL;
@@ -43,18 +44,31 @@ Matrix* create_matrix_from_file(const char* path_file) {
   int n, m;
   int res_dim_r = read_dimensions(f, &n, &m);
 
-  if (res_dim_r != EXIT_SUCCESS) return NULL;
+  if (res_dim_r != EXIT_SUCCESS) {
+    fclose(f);
+    return NULL;
+  }
 
   Matrix* matr = malloc(sizeof(Matrix));
 
-  if (matr == NULL) return NULL;
+  if (matr == NULL) {
+    fclose(f);
+    return NULL;
+  }
 
   matr->n = n;
   matr->m = m;
   matr->data = allocate_matrix_data(n, m);
 
+  if (matr->data == NULL) {
+    free(matr);
+    fclose(f);
+    return NULL;
+  }
+
   if (!matr->data) {
     free(matr);
+    fclose(f);
     return NULL;
   }
 
@@ -62,6 +76,7 @@ Matrix* create_matrix_from_file(const char* path_file) {
     for (size_t j = 0; j < matr->m; j++)
       if (fscanf(f, "%lf", &matr->data[i][j]) != 1) {
         free_matrix(matr);
+        fclose(f);
         return NULL;
       }
 
@@ -228,6 +243,7 @@ int det(const Matrix* matrix, double* val) {
       det(minor, &val_minor);
       det_val += k * matrix->data[0][i] * val_minor;
       k = -k;
+      free_matrix(minor);
     }
   }
   *val = det_val;
@@ -261,6 +277,7 @@ Matrix* adj(const Matrix* matrix) {
 
 Matrix* inv(const Matrix* matrix) {
   Matrix* inv = create_matrix(matrix->n, matrix->m);
+  if (inv == NULL) return NULL;
 
   if (matrix->n == 1) {
     inv->data[0][0] = 1;
