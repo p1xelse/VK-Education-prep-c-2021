@@ -9,6 +9,7 @@
 
 #define IS_SPACE 1
 #define NOT_SPACE 0
+#define BUF_NUM_SIZE 5
 
 typedef enum {
   L_FROM,
@@ -65,26 +66,23 @@ void from_w(char *s, elem_t *elem, FILE *f) {
   long pos = ftell(f);
   char *line = NULL;
   size_t len = 0;
-  ssize_t read;
 
-  while ((read = getline(&line, &len, f)) != -1) {
-    // printf("line = %s\n", line);
+  while ((getline(&line, &len, f)) != -1) {
     if (line[0] == ' ') {
       if (strchr(line, '\r')) line[strchr(line, '\r') - line] = '\0';
 
       if (strchr(line, '\n')) line[strchr(line, '\n') - line] = '\0';
 
       while (line[1] == ' ') memmove(&line[1], &line[2], strlen(line));
-      // printf("elem1 = %s\n", elem->data);
       elem->data =
           realloc(elem->data, strlen(elem->data) + 1 + strlen(line) + 1);
-      strcat(elem->data, line);
-      // printf("elem2 = %s\n", elem->data);
+      strncat(elem->data, line, strlen(line));
     } else {
       fseek(f, pos, SEEK_SET);
       break;
     }
   }
+  free(line);
 }
 
 void to_w(char *s, elem_t *elem, FILE *f) {
@@ -97,20 +95,20 @@ void to_w(char *s, elem_t *elem, FILE *f) {
   long pos = ftell(f);
   char *line = NULL;
   size_t len = 0;
-  ssize_t read;
 
-  while ((read = getline(&line, &len, f)) != -1) {
+  while ((getline(&line, &len, f)) != -1) {
     if (line[0] == ' ') {
       pos = ftell(f);
       while (line[1] == ' ') memmove(&line[1], &line[2], strlen(line) - 1);
       elem->data =
           realloc(elem->data, strlen(elem->data) + 1 + strlen(line) + 1);
-      strcat(elem->data, line);
+      strncat(elem->data, line, strlen(line));
     } else {
       fseek(f, pos, SEEK_SET);
       break;
     }
   }
+  free(line);
 }
 
 int isempty(const char *s) {
@@ -124,12 +122,15 @@ int isempty(const char *s) {
 int all_empty_after(FILE *f) {
   char *line = NULL;
   size_t len = 0;
-  ssize_t read;
   int pos = ftell(f);
-  while ((read = getline(&line, &len, f)) != -1) {
-    // printf("empty %s\n", line);
-    if (!isempty(line)) return 0;
+  while ((getline(&line, &len, f)) != -1) {
+    if (!isempty(line)) {
+      free(line);
+      return 0;
+    }
   }
+
+  free(line);
 
   fseek(f, pos, SEEK_SET);
 
@@ -144,7 +145,6 @@ int is_end_del(char *s, char *del) {
 }
 
 int get_count_bound(FILE *f, char *s) {
-  // long pos = ftell(f);
   if (s[0] == '"') {
     memmove(&s[0], &s[1], strlen(s));
     s[strchr(s, '"') - s] = '\0';
@@ -158,15 +158,13 @@ int get_count_bound(FILE *f, char *s) {
 
   del_space_end(s);
   del_space_beg(s);
-  // printf("bound = %s len = %ld\n", s, strlen(s));
 
   char *line = NULL;
   size_t len = 0;
-  ssize_t read;
   int count = 0;
   int count_bound = 0;
 
-  while ((read = getline(&line, &len, f)) != -1) {
+  while ((getline(&line, &len, f)) != -1) {
     if (strstr(line, s) && !is_end_del(line, s)) {
       count_bound++;
       // printf("line = %s\n", s);
@@ -174,44 +172,20 @@ int get_count_bound(FILE *f, char *s) {
     }
   }
 
-  // printf("count = %d\n", count);
-  // fseek(f, pos, SEEK_SET);
+  free(line);
+
   return count;
 }
 
-// int is_false_multipart(FILE *f) {
-//   long pos = ftell(f);
-//   char *line = NULL;
-//   size_t len = 0;
-//   ssize_t read;
-//   int prev = NOT_SPACE;
-//   int k = 0;
-//   while ((read = getline(&line, &len, f)) != -1) {
-//     if (!isempty(line) && prev == IS_SPACE) {
-//       // printf("%d %s", k, line);
-//       return 0;
-//     }
-//     if (isempty(line)) prev = IS_SPACE;
-
-//     k++;
-//   }
-
-//   fseek(f, pos, SEEK_SET);
-
-//   return 1;
-// }
-
 void ctype_f(char *s, FILE *f, elem_t *elem) {
-  // printf("s = %s\n", s);
   int flag_multipart = 0;
   if (strstr(s, "multipart") || strstr(s, "MULTIPART")) flag_multipart = 1;
 
   long pos = ftell(f);
   char *line = NULL;
   size_t len = 0;
-  ssize_t read;
 
-  while (flag_multipart == 0 && (read = getline(&line, &len, f)) != -1) {
+  while (flag_multipart == 0 && (getline(&line, &len, f)) != -1) {
     if (line[0] == ' ') {
       pos = ftell(f);
       if (strstr(line, "multipart") || strstr(line, "MULTIPART"))
@@ -221,6 +195,7 @@ void ctype_f(char *s, FILE *f, elem_t *elem) {
       break;
     }
   }
+  free(line);
 
   fseek(f, pos, SEEK_SET);
 
@@ -241,9 +216,11 @@ void ctype_f(char *s, FILE *f, elem_t *elem) {
   if (flag_bound) {
     count = get_count_bound(f, z + (strlen("boundary=")));
     // printf("count = %d\n", count);
-    if (count != 0)
-      sprintf(elem->data, "%d", count);
-    else {
+    if (count != 0) {
+      char buf[BUF_NUM_SIZE];
+      snprintf(buf, sizeof(buf), "%d", count);
+      elem->data = strdup(buf);
+    } else {
       elem->data = strdup("0");
     }
 
@@ -252,8 +229,10 @@ void ctype_f(char *s, FILE *f, elem_t *elem) {
     return;
   }
 
-  // printf("flag = %d", flag_multipart);
-  while (flag_multipart == 1 && (read = getline(&line, &len, f)) != -1) {
+  line = NULL;
+  len = 0;
+
+  while (flag_multipart == 1 && (getline(&line, &len, f)) != -1) {
     if (isspace(line[0]) && (flag_bound == 0)) {
       pos = ftell(f);
       char *p = strstr(line, "boundary");
@@ -262,6 +241,7 @@ void ctype_f(char *s, FILE *f, elem_t *elem) {
 
       if (p != NULL && (*(p - 1) != ';') && !isspace(*(p - 1))) {
         elem->data = strdup("1");
+        free(line);
         return;
       }
 
@@ -269,10 +249,12 @@ void ctype_f(char *s, FILE *f, elem_t *elem) {
         flag_bound = 1;
         count = get_count_bound(f, p + (strlen("boundary=")));
         fseek(f, pos, SEEK_SET);
-        if (count != 0)
-          sprintf(elem->data, "%d", count);
-        else {
-          elem->data = "0";
+        if (count != 0) {
+          char buf[BUF_NUM_SIZE];
+          snprintf(buf, sizeof(buf), "%d", count);
+          elem->data = strdup(buf);
+        } else {
+          elem->data = strdup("0");
         }
       }
     } else {
@@ -280,10 +262,11 @@ void ctype_f(char *s, FILE *f, elem_t *elem) {
       break;
     }
   }
+  free(line);
 
   // printf("elem.data = %s\ncount = %d\n", elem->data, count);
 
-  if (flag_multipart == 0) elem->data = "1";
+  if (flag_multipart == 0) elem->data = strdup("1");
 }
 
 void date_w(char *s, elem_t *elem, FILE *f) {
@@ -296,17 +279,18 @@ void date_w(char *s, elem_t *elem, FILE *f) {
   long pos = ftell(f);
   char *line = NULL;
   size_t len = 0;
-  ssize_t read;
 
-  while ((read = getline(&line, &len, f)) != -1) {
+  while ((getline(&line, &len, f)) != -1) {
     if (line[0] == ' ') {
       while (line[1] == ' ') memmove(&line[1], &line[2], strlen(line) - 1);
       elem->data =
           realloc(elem->data, strlen(elem->data) + 1 + strlen(line) + 1);
-      strcat(elem->data, line);
-    } else
+      strncat(elem->data, line, strlen(line));
+    } else {
       break;
+    }
   }
+  free(line);
 
   fseek(f, pos, SEEK_SET);
 }
@@ -324,7 +308,7 @@ typedef struct {
 
 rule_t syntax[S_COUNT][L_COUNT] = {
     //		            L_FROM, 		    L_CTYPE, 	        L_TO,
-    //L_DATE
+    // L_DATE
     /*S_BEGIN*/ {{S_END, from_w, NULL},
                  {S_END, NULL, ctype_f},
                  {S_END, to_w, NULL},
@@ -384,35 +368,49 @@ int str_eml_parse(char *s, elem_t *elem, FILE *f, elem_t *out_arr) {
 void file_eml_parse(FILE *f) {
   char *line = NULL;
   size_t len = 0;
-  ssize_t read;
   elem_t out_arr[4] = {
       {L_ERR, NULL}, {L_ERR, NULL}, {L_ERR, NULL}, {L_ERR, NULL}};
-  elem_t elem;
 
-  while ((read = getline(&line, &len, f)) != -1) {
-    // printf("lne = %s\n", line);
+  while ((getline(&line, &len, f)) != -1) {
+    if (out_arr[0].type != L_ERR && out_arr[1].type != L_ERR &&
+        out_arr[2].type != L_ERR && out_arr[3].type != L_ERR)
+      break;
+
+    elem_t elem = {L_ERR, NULL};
     int res = str_eml_parse(line, &elem, f, out_arr);
 
-    if (res != EXIT_FAILURE) {
+    if (res != EXIT_FAILURE && elem.data != NULL) {
       if (strchr(elem.data, '\r'))
         elem.data[strchr(elem.data, '\r') - elem.data] = '\0';
       if (strchr(elem.data, '\n'))
         elem.data[strchr(elem.data, '\n') - elem.data] = '\0';
       if (out_arr[elem.type].type == L_ERR) {
-        out_arr[elem.type].type = elem.type;
-        out_arr[elem.type].data = strdup(elem.data);
-        // printf("%d %s\n\n", elem.type, elem.data);
-        // printf("%d %s\n\n", out_arr[elem.type].type,
-        // out_arr[elem.type].data);
+        // out_arr[elem.type].type = elem.type;
+        // free(out_arr[elem.type].data);
+        // out_arr[elem.type].data = strdup(elem.data);
+        if (elem.type == L_FROM) {
+          out_arr[L_FROM].type = elem.type;
+          out_arr[L_FROM].data = strdup(elem.data);
+        }
+        if (elem.type == L_TO) {
+          out_arr[L_TO].type = elem.type;
+          out_arr[L_TO].data = strdup(elem.data);
+        }
+        if (elem.type == L_DATE) {
+          out_arr[L_DATE].type = elem.type;
+          out_arr[L_DATE].data = strdup(elem.data);
+        }
+        if (elem.type == L_CTYPE) {
+          out_arr[L_CTYPE].type = elem.type;
+          out_arr[L_CTYPE].data = strdup(elem.data);
+        }
       }
-
-      // printf("%d %s\n", elem.type,  out_arr[elem.type].data);
     }
-    if (out_arr[0].type != L_ERR && out_arr[1].type != L_ERR &&
-        out_arr[2].type != L_ERR && out_arr[3].type != L_ERR)
-      break;
+
+    free(elem.data);
   }
-  // printf("%d %s\n\n", out_arr[2].type, out_arr[2].data);
+  free(line);
+
   if (out_arr[L_FROM].data == NULL)
     printf("|");
   else
@@ -433,6 +431,8 @@ void file_eml_parse(FILE *f) {
   else
     printf("%s", out_arr[L_CTYPE].data);
 
-  // printf("%s|%s|%s|%s\n", out_arr[L_FROM].data, out_arr[L_TO].data,
-  // out_arr[L_DATE].data, out_arr[L_CTYPE].data);
+  free(out_arr[L_CTYPE].data);
+  free(out_arr[L_DATE].data);
+  free(out_arr[L_FROM].data);
+  free(out_arr[L_TO].data);
 }
