@@ -190,5 +190,3 @@ Matrix Matrix::inv() const {
 }
 
 }  // namespace prep
-
-int main() {}
