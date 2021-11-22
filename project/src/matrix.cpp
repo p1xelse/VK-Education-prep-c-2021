@@ -176,9 +176,18 @@ double Matrix::det() const {
   return val;
 }
 
-Matrix Matrix::transp() const {}
-Matrix Matrix::adj() const {}
-Matrix Matrix::inv() const {}
+Matrix Matrix::transp() const {
+  Matrix matr = *this;
+  return matr;
+}
+Matrix Matrix::adj() const {
+  Matrix matr = *this;
+  return matr;
+}
+Matrix Matrix::inv() const {
+  Matrix matr = *this;
+  return matr;
+}
 
 }  // namespace prep
 
