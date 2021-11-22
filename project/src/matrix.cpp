@@ -1,7 +1,9 @@
 #include "matrix.h"
 
 #include <cmath>
+#include <iomanip>
 #include <iostream>
+#include <limits>
 
 #include "exceptions.h"
 
@@ -12,6 +14,7 @@ Matrix::Matrix(size_t rows, size_t cols) : rows(rows), cols(cols) {
 }
 
 Matrix::Matrix(std::istream& is) {
+  if (!is) throw(InvalidMatrixStream());
   if (!(is >> rows)) throw(InvalidMatrixStream());
 
   if (!(is >> cols)) throw(InvalidMatrixStream());
@@ -29,13 +32,13 @@ size_t Matrix::getRows() const { return rows; }
 size_t Matrix::getCols() const { return cols; }
 
 double Matrix::operator()(size_t i, size_t j) const {
-  if (i > cols && j > rows) throw(OutOfRange(i, j, *this));
+  if (i > rows - 1 || j > cols - 1) throw(OutOfRange(i, j, *this));
 
   return data[i][j];
 }
 
 double& Matrix::operator()(size_t i, size_t j) {
-  if (i > cols && j > rows) throw(OutOfRange(i, j, *this));
+  if (i > rows - 1 || j > cols - 1) throw(OutOfRange(i, j, *this));
 
   return data[i][j];
 }
@@ -106,23 +109,37 @@ Matrix Matrix::operator*(double val) const {
 }
 
 Matrix operator*(double val, const Matrix& matrix) {
-  Matrix matrix_mul_scal(matrix.getRows(), matrix.getRows());
+  Matrix matrix_mul_scal(matrix.getRows(), matrix.getCols());
 
   for (size_t i = 0; i < matrix.getRows(); i++)
-    for (size_t j = 0; j < matrix.getRows(); j++)
+    for (size_t j = 0; j < matrix.getCols(); j++)
       matrix_mul_scal(i, j) = matrix(i, j) * val;
 
   return matrix_mul_scal;
 }
 
 std::ostream& operator<<(std::ostream& os, const Matrix& matrix) {
-  os << matrix.getRows() << " " << matrix.getCols() << std::endl;
+  if (!os) throw(InvalidMatrixStream());
+  os << matrix.getRows() << ' ' << matrix.getCols() << std::endl;
   for (size_t i = 0; i < matrix.getRows(); i++) {
-    for (size_t j = 0; j < matrix.getRows(); j++) os << matrix(i, j) << " ";
+    for (size_t j = 0; j < matrix.getCols(); j++) {
+      os << std::setprecision(std::numeric_limits<double>::max_digits10)
+         << matrix.data[i][j];
+      if (j < matrix.getCols() - 1) os << ' ';
+    }
     os << std::endl;
   }
 
   return os;
+}
+
+Matrix Matrix::transp() const {
+  Matrix new_matr(cols, rows);
+  for (size_t i = 0; i < rows; i++)
+    for (size_t j = 0; j < cols; j++)
+      new_matr(j, i) = data[i][j];
+  
+  return new_matr;
 }
 
 Matrix Matrix::del_col_row(size_t row, size_t col) const {
@@ -176,10 +193,6 @@ double Matrix::det() const {
   return val;
 }
 
-Matrix Matrix::transp() const {
-  Matrix matr = *this;
-  return matr;
-}
 Matrix Matrix::adj() const {
   Matrix matr = *this;
   return matr;
