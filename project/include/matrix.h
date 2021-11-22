@@ -1,7 +1,7 @@
-#pragma once // NOLINT
+#pragma once  // NOLINT
 
-#include <vector>
 #include <istream>
+#include <vector>
 
 namespace prep {
 class Matrix {
@@ -27,15 +27,21 @@ class Matrix {
 
   Matrix operator*(double val) const;
 
-  friend
-  Matrix operator*(double val, const Matrix& matrix);
-  friend
-  std::ostream& operator<<(std::ostream& os, const Matrix& matrix);
+  friend Matrix operator*(double val, const Matrix& matrix);
+  friend std::ostream& operator<<(std::ostream& os, const Matrix& matrix);
 
   Matrix transp() const;
   double det() const;
   Matrix adj() const;
   Matrix inv() const;
+
+ private:
+  size_t rows;
+  size_t cols;
+  std::vector<std::vector<double>> data;
+
+  void det_calc(const Matrix& matrix, double* val) const;
+  Matrix del_col_row(size_t row, size_t col) const;
 };
 
 Matrix operator*(double val, const Matrix& matrix);
