@@ -136,9 +136,8 @@ std::ostream& operator<<(std::ostream& os, const Matrix& matrix) {
 Matrix Matrix::transp() const {
   Matrix new_matr(cols, rows);
   for (size_t i = 0; i < rows; i++)
-    for (size_t j = 0; j < cols; j++)
-      new_matr(j, i) = data[i][j];
-  
+    for (size_t j = 0; j < cols; j++) new_matr(j, i) = data[i][j];
+
   return new_matr;
 }
 
