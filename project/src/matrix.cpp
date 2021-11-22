@@ -6,7 +6,7 @@
 #include "exceptions.h"
 
 namespace prep {
-Matrix::Matrix(size_t rows, size_t cols) {
+Matrix::Matrix(size_t rows, size_t cols) : rows(rows), cols(cols) {
   data.resize(rows);
   for (size_t i = 0; i < rows; i++) data[i].resize(cols);
 }
