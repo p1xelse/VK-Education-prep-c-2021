@@ -1,16 +1,18 @@
 #include <stdio.h>
 #include "print_range.h"
 
-int print_range(int n) {
-    if (n == 1) {
-        printf("%d", n);
-        return 1;
-    } else {
-        if (n  <= 0)
-            printf(" %d", print_range(n + 1) - 1);
-        else
-            printf(" %d", print_range(n - 1) + 1);
+#define LEFT_BORDER 1
 
-        return n;
+int print_range(int right_border) {
+    if (right_border == LEFT_BORDER) {
+        printf("%d", right_border);
+        return LEFT_BORDER;
+    } else {
+        if (right_border  <= 0)
+            printf(" %d", print_range(right_border + 1) - 1);
+        else
+            printf(" %d", print_range(right_border - 1) + 1);
+
+        return right_border;
     }
 }

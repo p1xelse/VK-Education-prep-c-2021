@@ -1,11 +1,11 @@
-int is_simple_num(int num) {
+int is_simple(int num) {
     if (num < 2)
         return 0;
     if (num == 2)
         return 1;
 
-    for (int i = 2; i < num; i++) {
-        if (num % i == 0)
+    for (int delimiter = 2; delimiter * delimiter < num; delimiter++) {
+        if (num % delimiter == 0)
             return 0;
     }
 

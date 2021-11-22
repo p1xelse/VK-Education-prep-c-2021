@@ -1,6 +1,6 @@
-#include "utils.h"
-#include "simple.h"
 #include "print_range.h"
+#include "simple.h"
+#include "utils.h"
 
 #define ERR_ARGS_COUNT (-1)
 #define ERR_WRONG_FLG (-2)
@@ -8,6 +8,7 @@
 #define TST_FOO_FIX 1
 #define TST_FOO_IMPL 2
 #define TST_MOD_IMPL 3
+#define TST_PRINT_RANGE 4
 
 /* NOTE(stitaevskiy):
  * We use `atoi` function just for simplification and code reducing.
@@ -53,10 +54,10 @@ int main(int argc, const char **argv) {
         }
         case TST_MOD_IMPL: {
             int num = atoi(data);
-            printf("%d", is_simple_num(num));
+            printf("%d", is_simple(num));
             break;
         }
-        case 4: {
+        case TST_PRINT_RANGE: {
             int num = atoi(data);
             print_range(num);
             break;
