@@ -160,6 +160,13 @@ Matrix Matrix::del_col_row(size_t row, size_t col) const {
   return new_matr;
 }
 
+void Matrix::free_matrix() {
+  for (size_t z = 0; z < rows; z++) {
+    data[z].clear();
+  }
+  data.clear();
+}
+
 void Matrix::det_calc(const Matrix& matrix, double* val) const {
   double det_val = 0;
   if (matrix.getRows() != matrix.getCols()) throw(DimensionMismatch(*this));
@@ -175,11 +182,7 @@ void Matrix::det_calc(const Matrix& matrix, double* val) const {
       det_calc(minor, &val_minor);
       det_val += k * matrix(0, i) * val_minor;
       k = -k;
-
-      for (size_t z = 0; i < minor.getRows(); z++) {
-        minor.data[i].clear();
-      }
-      minor.data.clear();
+      minor.free_matrix();
     }
   }
   *val = det_val;
@@ -193,12 +196,44 @@ double Matrix::det() const {
 }
 
 Matrix Matrix::adj() const {
-  Matrix matr = *this;
-  return matr;
+  if (rows != cols) throw(DimensionMismatch(*this));
+  Matrix adj(rows, cols);
+
+  if (rows == 1) {
+    adj.data[0][0] = data[0][0];
+    return adj;
+  }
+
+  int k;
+
+  for (size_t i = 0; i < rows; i++) {
+    for (size_t j = 0; j < cols; j++) {
+      Matrix tmp_matrix = (*this).del_col_row(i, j);
+      double val = tmp_matrix.det();
+      k = pow(-1, i + 1 + j + 1);
+      adj.data[i][j] = k * val;
+      tmp_matrix.free_matrix();
+    }
+  }
+  Matrix tmp = adj.transp();
+  adj.free_matrix();
+  return tmp;
 }
 Matrix Matrix::inv() const {
-  Matrix matr = *this;
-  return matr;
+  if (rows != cols) throw(DimensionMismatch(*this));
+  Matrix inv_m(rows, cols);
+
+  if (rows == 1) {
+    inv_m.data[0][0] = 1 / data[0][0];
+    return inv_m;
+  }
+  double val = det();
+  if (val == 0) throw SingularMatrix();
+  Matrix adj_m = adj();
+  Matrix tmp = adj_m * (1 / val);
+  inv_m.free_matrix();
+  adj_m.free_matrix();
+  return tmp;
 }
 
 }  // namespace prep

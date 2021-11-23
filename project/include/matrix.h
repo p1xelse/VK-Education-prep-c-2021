@@ -42,6 +42,7 @@ class Matrix {
 
   void det_calc(const Matrix& matrix, double* val) const;
   Matrix del_col_row(size_t row, size_t col) const;
+  void free_matrix();
 };
 
 Matrix operator*(double val, const Matrix& matrix);
