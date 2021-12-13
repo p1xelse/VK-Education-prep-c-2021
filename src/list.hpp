@@ -6,7 +6,7 @@ namespace task {
 
 template <class T>
 class list {
-   public:
+ public:
     class const_iterator;
     struct node {
         friend class list<T>;
@@ -17,7 +17,7 @@ class list {
         node* next;
     };
     class iterator {
-       public:
+     public:
         friend class list<T>;
         using difference_type = ptrdiff_t;
         using value_type = T;
@@ -42,12 +42,12 @@ class list {
 
         // Your code goes here?..
 
-       private:
+     private:
         node* cur;
     };
 
     class const_iterator {
-       public:
+     public:
         friend class list<T>;
         using difference_type = ptrdiff_t;
         using value_type = const T;
@@ -73,7 +73,7 @@ class list {
 
         // Your code goes here?..
 
-       private:
+     private:
         node* cur;
     };
 
@@ -138,7 +138,7 @@ class list {
     node* first_ptr;
     size_t size_l;
 
-   private:
+ private:
     size_t max_size_par = std::numeric_limits<size_t>::max();
     // Your code goes here...
 };
@@ -254,7 +254,6 @@ typename list<T>::const_iterator list<T>::const_iterator::operator--(int) {
     const_iterator it(tmp);
     cur = cur->prev;
     return it;
-    ;
 }
 
 template <class T>
@@ -400,8 +399,7 @@ typename list<T>::const_iterator list<T>::erase(const_iterator first,
                                                 const_iterator last) {
     auto it = const_iterator(last.cur->next);
     auto it_c = first;
-    while ((it_c = erase(it_c)) != last)
-        ;
+    while ((it_c = erase(it_c)) != last) {}
     return it;
 }
 
@@ -556,10 +554,11 @@ list<T>::list(const list& other) : list() {
 template <class T>
 list<T>& list<T>::operator=(const list& other) {
     clear();
+    size_l = 0;
     auto it = other.begin();
     while (it != other.end()) {
         push_back(*it);
-        it++;
+        ++it;
     }
     return *this;
 }
@@ -698,7 +697,7 @@ void list<T>::remove(const T& value) {
         if (*it == value_copy)
             it = erase(it);
         else
-            it++;
+            ++it;
     }
 }
 template <class T>
@@ -707,7 +706,7 @@ void list<T>::reverse() {
     auto it = begin();
     while (it != end()) {
         new_list.push_front(it.cur->data);
-        it++;
+        ++it;
     }
     swap(new_list);
     new_list.clear();
@@ -729,9 +728,9 @@ void list<T>::unique() {
             auto it_end = const_iterator(new_cur);
             auto it_res = erase(it_beg, it_end);
             cur = it_res.cur;
-
-        } else
+        } else {
             cur = cur->next;
+        }
     }
 }
 
