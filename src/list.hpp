@@ -10,7 +10,6 @@ class list {
     class const_iterator;
     struct node {
         friend class list<T>;
-        node();
         node(const T& value);
         T data;
         node* prev;
@@ -403,12 +402,12 @@ typename list<T>::const_iterator list<T>::erase(const_iterator first,
     return it;
 }
 
-template <class T>
-list<T>::node::node() {
-    data = T{};
-    prev = NULL;
-    next = NULL;
-}
+// template <class T>
+// list<T>::node::node() {
+//     data = T{};
+//     prev = NULL;
+//     next = NULL;
+// }
 
 template <class T>
 list<T>::node::node(const T& value) {
@@ -428,7 +427,7 @@ template <class T>
 void list<T>::push_back(const T& value) {
     if (size_l == 0) {
         first_ptr = new node(value);
-        node* cap = new node;
+        node* cap = new node(T{});
         first_ptr->next = cap;
         cap->next = NULL;
         cap->prev = first_ptr;
@@ -449,7 +448,7 @@ template <class T>
 void list<T>::push_front(const T& value) {
     if (size_l == 0) {
         first_ptr = new node(value);
-        node* cap = new node;
+        node* cap = new node(T{});
         first_ptr->next = cap;
         cap->next = NULL;
         cap->prev = first_ptr;
@@ -583,6 +582,8 @@ void list<T>::clear() {
 }
 template <class T>
 void list<T>::resize(size_t count) {
+    if (count == 0)
+        clear();
     //    std::cout << size_l;
     size_t diff = count - size_l;
     if (count > size_l) {
@@ -614,7 +615,13 @@ template <class T>
 void list<T>::sorted_insert(node* elem) {
     node* cur = first_ptr;
     if (cur == NULL) {
-        push_back(elem->data);
+        first_ptr = last_ptr = elem;
+        node *cap = new node(T{});
+        cap->next = NULL;
+        cap->prev = last_ptr;
+        first_ptr->prev = NULL;
+        first_ptr->next = cap;
+        size_l++;
         return;
     }
     if (elem->data <= cur->data) {
@@ -653,7 +660,9 @@ template <class T>
 void list<T>::merge(list& other) {
     if (this == &other) return;
     node* next;
-    for (node* cur = other.first_ptr; cur->next; cur = next) {
+    delete other.last_ptr->next;
+    other.last_ptr->next = NULL;
+    for (node* cur = other.first_ptr; cur; cur = next) {
         next = cur->next;
         sorted_insert(cur);
     }
@@ -721,9 +730,6 @@ void list<T>::unique() {
             while (new_cur->next && (new_cur->data == new_cur->next->data)) {
                 new_cur = new_cur->next;
             }
-
-            //            std::cout << cur->data << "--" << new_cur->next->data
-            //            << std::endl;
             auto it_beg = const_iterator(cur);
             auto it_end = const_iterator(new_cur);
             auto it_res = erase(it_beg, it_end);
@@ -740,14 +746,20 @@ void list<T>::sort() {
     node* cur = first_ptr;
     if (cur == NULL) return;
 
-    while (cur->next != NULL) {
+    delete last_ptr->next;
+    last_ptr->next = NULL;
+
+    while (cur != NULL) {
         node* next = cur->next;
         new_list.sorted_insert(cur);
         cur = next;
     }
+
     swap(new_list);
-    new_list.first_ptr = NULL;
+
     new_list.last_ptr = NULL;
+    new_list.first_ptr = NULL;
+    new_list.size_l = 0;
 }
 
 }  // namespace task
