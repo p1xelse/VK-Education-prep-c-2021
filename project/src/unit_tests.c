@@ -1,7 +1,10 @@
+#include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #include "client.h"
 #include "database_operations.h"
+#include "transfer.h"
 
 int compare_clients(client_t *cl_1, client_t *cl_2) {
   int rc = 0;
@@ -20,22 +23,28 @@ int compare_clients(client_t *cl_1, client_t *cl_2) {
 void test_write_client() {
   const char *filename = "test_write.txt";
 
-  client_t expected_data;
-  expected_data.number = 1;
-  strncpy(expected_data.name, "Dima", MAX_LEN_NAME);
-  strncpy(expected_data.surname, "Programmer", MAX_LEN_SURNAME);
-  strncpy(expected_data.addres, "Moskow", MAX_LEN_ADRESS);
-  strncpy(expected_data.telnumber, "1488", MAX_LEN_TEL_NUMBER);
-  expected_data.indebtedness = 100;
-  expected_data.credit_limit = 205;
-  expected_data.cash_payments = 101;
+  client_t expected_data = {.number = 1,
+                            .name = "Dima",
+                            .surname = "Programmer",
+                            .addres = "Moskow",
+                            .telnumber = "1488",
+                            .indebtedness = 100,
+                            .credit_limit = 205,
+                            .cash_payments = 101};
 
   FILE *f = fopen(filename, "w+");
+  if (f == NULL) {
+    printf("Error open file during test");
+    return;
+  }
   write_client(&expected_data, f);
   rewind(f);
 
   client_t got_data;
-  read_client(&got_data, f);
+  if (read_client(&got_data, f) != EXIT_SUCCESS) {
+    printf("Error read client during test");
+    return;
+  }
 
   if (compare_clients(&got_data, &expected_data) == 0)
     printf("test_write_client: SUCCESS\n");
@@ -45,49 +54,66 @@ void test_write_client() {
 void test_update_database() {
   const char *filename_rec = "test_rec.txt";
 
-  client_t expected_data;
-  expected_data.number = 1;
-  strncpy(expected_data.name, "Dima", MAX_LEN_NAME);
-  strncpy(expected_data.surname, "Programmer", MAX_LEN_SURNAME);
-  strncpy(expected_data.addres, "Moskow", MAX_LEN_ADRESS);
-  strncpy(expected_data.telnumber, "1488", MAX_LEN_TEL_NUMBER);
-  expected_data.indebtedness = 100;
-  expected_data.credit_limit = 227;
-  expected_data.cash_payments = 101;
+  client_t expected_data = {.number = 1,
+                            .name = "Dima",
+                            .surname = "Programmer",
+                            .addres = "Moskow",
+                            .telnumber = "1488",
+                            .indebtedness = 100,
+                            .credit_limit = 227,
+                            .cash_payments = 101};
 
-  client_t client_data;
-  client_data.number = 1;
-  strncpy(client_data.name, "Dima", MAX_LEN_NAME);
-  strncpy(client_data.surname, "Programmer", MAX_LEN_SURNAME);
-  strncpy(client_data.addres, "Moskow", MAX_LEN_ADRESS);
-  strncpy(client_data.telnumber, "1488", MAX_LEN_TEL_NUMBER);
-  client_data.indebtedness = 100;
+  client_t client_data = expected_data;
   client_data.credit_limit = 205;
-  client_data.cash_payments = 101;
 
   const char *filename_trans = "test_transf.txt";
-  client_t transfer;
+  transfer_t transfer;
   transfer.number = 1;
-  transfer.cash_payments = 22;
+  transfer.cash_payments =
+      expected_data.credit_limit - client_data.credit_limit;
 
   FILE *f_rec = fopen(filename_rec, "w+");
+
+  if (f_rec == NULL) {
+    printf("Error open file during test");
+    return;
+  }
+
   write_client(&client_data, f_rec);
   rewind(f_rec);
 
   FILE *f_transf = fopen(filename_trans, "w+");
-  write_transaction(&transfer, f_transf);
+  if (f_transf == NULL) {
+    printf("Error open file during test");
+    fclose(f_rec);
+    return;
+  }
+  write_transfer(&transfer, f_transf);
   rewind(f_transf);
 
   const char *filename_blackrec = "test_blackrecord.txt";
   FILE *f_blackrecord = fopen(filename_blackrec, "w+");
+  if (f_blackrecord == NULL) {
+    printf("Error open file during test");
+    fclose(f_rec);
+    fclose(f_transf);
+    return;
+  }
   client_t rec_buf, transfer_buf;
-  update_database(f_rec, f_transf, f_blackrecord, &rec_buf, &transfer_buf);
+  db_update(f_rec, f_transf, f_blackrecord, &rec_buf, &transfer_buf);
   rewind(f_blackrecord);
 
   client_t got_data;
-  read_client(&got_data, f_blackrecord);
+  if (read_client(&got_data, f_blackrecord) != EXIT_SUCCESS) {
+    printf("Error read client during test");
+    fclose(f_rec);
+    fclose(f_transf);
+    return;
+  }
 
-  if (compare_clients(&got_data, &expected_data) == 0)
+  int res_cmp = compare_clients(&got_data, &expected_data);
+  assert(res_cmp == 0);
+  if (res_cmp == 0)
     printf("test_update_database: SUCCESS\n");
 
   fclose(f_transf);

@@ -5,9 +5,9 @@
 
 #include "client.h"
 
-void clients_data_write(FILE *ofPTR, client_t *client);
-void transactions_data_write(FILE *ofPTR, client_t *transfer);
-void update_database(FILE *ofPTR, FILE *ofPTR_2, FILE *blackrecord,
+void db_write_clients(FILE *db_clients, client_t *client);
+void db_write_transfers(FILE *db_transfers, client_t *transfer);
+void db_update(FILE *db_clients, FILE *db_transfers, FILE *blackrecord,
                      client_t *client_data, client_t *transfer);
 
 #endif  // PROJECT_INCLUDE_DATABASE_OPERATIONS_H_

@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "client.h"
+#include "transfer.h"
 #include "database_operations.h"
 
 #define FILENAME_REC "record.dat"
@@ -11,7 +12,7 @@ int main(void) {
   setbuf(stdin, NULL);
   int choice = 0;
 
-  FILE *ptr, *ptr_2, *blackrecord;
+  FILE *db_clients, *db_transfers, *blackrecord;
   client_t client_data, transfer;
 
   printf("%s",
@@ -22,14 +23,14 @@ int main(void) {
     switch (choice) {
       case 1:
 
-        ptr = fopen(FILENAME_REC, "r+");
+        db_clients = fopen(FILENAME_REC, "w");
 
-        if (ptr == NULL) {
+        if (db_clients == NULL) {
           puts("Not acess");
         } else {
-          clients_data_write(ptr, &client_data);
+          db_write_clients(db_clients, &client_data);
           printf("Success!\n");
-          fclose(ptr);
+          fclose(db_clients);
           choice = 0;
         }
 
@@ -37,29 +38,36 @@ int main(void) {
 
       case 2:
 
-        ptr = fopen(FILENAME_TRANS, "r+");
+        db_transfers = fopen(FILENAME_TRANS, "w");
 
-        if (ptr == NULL) {
+        if (db_transfers == NULL) {
           puts("Not acess");
         } else {
-          transactions_data_write(ptr, &transfer);
+          db_write_transfers(db_transfers, &transfer);
           printf("Success!");
-          fclose(ptr);
+          fclose(db_transfers);
         }
 
         break;
 
       case 3:
-        ptr = fopen(FILENAME_REC, "r+");
-        ptr_2 = fopen(FILENAME_TRANS, "r+");
+        db_clients = fopen(FILENAME_REC, "r+");
+        db_transfers = fopen(FILENAME_TRANS, "r+");
         blackrecord = fopen(FILENAME_BL_RECORD, "r+");
 
-        if (ptr == NULL || ptr_2 == NULL || blackrecord == NULL) {
+
+        if (db_clients == NULL || db_transfers == NULL || blackrecord == NULL) {
+          if (db_clients != NULL)
+            fclose(db_clients);
+          if (db_transfers != NULL)
+            fclose(db_transfers);
+          if (blackrecord != NULL)
+            fclose(blackrecord);
           puts("exit");
         } else {
-          update_database(ptr, ptr_2, blackrecord, &client_data, &transfer);
-          fclose(ptr);
-          fclose(ptr_2);
+          db_update(db_clients, db_transfers, blackrecord, &client_data, &transfer);
+          fclose(db_clients);
+          fclose(db_transfers);
           fclose(blackrecord);
           printf("Success!");
         }
