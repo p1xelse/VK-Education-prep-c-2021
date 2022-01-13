@@ -38,11 +38,10 @@ class Matrix {
  private:
   size_t rows;
   size_t cols;
-  std::vector<std::vector<double>> data;
+  std::vector<double> data;
 
-  void det_calc(const Matrix& matrix, double* val) const;
-  Matrix del_col_row(size_t row, size_t col) const;
-  void free_matrix();
+  void calcDet(const Matrix& matrix, double* val) const;
+  Matrix delColRow(size_t row, size_t col) const;
 };
 
 Matrix operator*(double val, const Matrix& matrix);

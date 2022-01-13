@@ -53,4 +53,10 @@ class SingularMatrix: public MatrixException {
   SingularMatrix()
       : MatrixException("Singular matrix") {}
 };
+
+class ZeroDimensions: public MatrixException {
+ public:
+  ZeroDimensions()
+      : MatrixException("Zero Dimensions") {}
+};
 }  // namespace prep
