@@ -24,8 +24,8 @@ class list {
         using reference = T&;
         using iterator_category = std::bidirectional_iterator_tag;
 
-        iterator();
-        iterator(node* ptr);
+        // iterator();
+        iterator(node* ptr = nullptr);
         iterator(const iterator&);
         iterator& operator=(const iterator&);
 
@@ -54,8 +54,7 @@ class list {
         using reference = const T&;
         using iterator_category = std::bidirectional_iterator_tag;
 
-        const_iterator();
-        const_iterator(node* ptr);
+        const_iterator(node* ptr = nullptr);
         const_iterator(const const_iterator&);
         const_iterator(const iterator&);
         const_iterator& operator=(const const_iterator&);
@@ -69,8 +68,6 @@ class list {
 
         bool operator==(const_iterator other) const;
         bool operator!=(const_iterator other) const;
-
-        // Your code goes here?..
 
      private:
         node* cur;
@@ -125,7 +122,6 @@ class list {
     void resize(size_t count);
     void swap(list& other);
 
-    void sorted_insert(node* elem);
     void merge(list& other);
     void splice(const_iterator pos, list& other);
     void remove(const T& value);
@@ -133,17 +129,14 @@ class list {
     void unique();
     void sort();
 
-    node* last_ptr;
-    node* first_ptr;
-    size_t size_l;
 
  private:
+    node* last_ptr;
+    node* first_ptr;
+    size_t list_size;
     size_t max_size_par = std::numeric_limits<size_t>::max();
-    // Your code goes here...
+    void sorted_insert(node* elem);
 };
-
-template <class T>
-list<T>::iterator::iterator() : cur{NULL} {}
 
 template <class T>
 list<T>::iterator::iterator(node* ptr) : cur{ptr} {}
@@ -153,7 +146,7 @@ list<T>::iterator::iterator(const iterator& other) : cur{other.cur} {}
 
 template <class T>
 typename list<T>::iterator& list<T>::iterator::operator=(
-    const iterator& other) {
+        const iterator& other) {
     cur = other.cur;
     return *this;
 }
@@ -205,9 +198,6 @@ template <class T>
 bool list<T>::iterator::operator!=(iterator other) const {
     return other.cur != cur;
 }
-
-template <class T>
-list<T>::const_iterator::const_iterator() : cur{NULL} {}
 
 template <class T>
 list<T>::const_iterator::const_iterator(const iterator& other)
@@ -340,7 +330,7 @@ typename list<T>::const_reverse_iterator list<T>::crend() const {
 template <class T>
 typename list<T>::const_iterator list<T>::insert(const_iterator pos,
                                                  const T& value) {
-    size_l++;
+    list_size++;
     node* new_node = new node(value);
     if (pos == cend()) {
         last_ptr = new_node;
@@ -374,11 +364,11 @@ typename list<T>::const_iterator list<T>::insert(const_iterator pos,
 }
 template <class T>
 typename list<T>::const_iterator list<T>::erase(const_iterator pos) {
-    if (size_l == 1) {
+    if (list_size == 1) {
         pop_back();
         return iterator();
     }
-    size_l--;
+    list_size--;
     if (pos == cbegin()) {
         first_ptr = pos.cur->next;
         delete pos.cur;
@@ -398,7 +388,8 @@ typename list<T>::const_iterator list<T>::erase(const_iterator first,
                                                 const_iterator last) {
     auto it = const_iterator(last.cur->next);
     auto it_c = first;
-    while ((it_c = erase(it_c)) != last) {}
+    while ((it_c = erase(it_c)) != last) {
+    }
     return it;
 }
 
@@ -420,12 +411,12 @@ template <class T>
 list<T>::list() {
     first_ptr = NULL;
     last_ptr = NULL;
-    size_l = 0;
+    list_size = 0;
 }
 
 template <class T>
 void list<T>::push_back(const T& value) {
-    if (size_l == 0) {
+    if (list_size == 0) {
         first_ptr = new node(value);
         node* cap = new node(T{});
         first_ptr->next = cap;
@@ -441,12 +432,12 @@ void list<T>::push_back(const T& value) {
         last_ptr->next = new_node;
         last_ptr = new_node;
     }
-    size_l++;
+    list_size++;
 }
 
 template <class T>
 void list<T>::push_front(const T& value) {
-    if (size_l == 0) {
+    if (list_size == 0) {
         first_ptr = new node(value);
         node* cap = new node(T{});
         first_ptr->next = cap;
@@ -460,13 +451,13 @@ void list<T>::push_front(const T& value) {
         new_node->prev = NULL;
         first_ptr = new_node;
     }
-    size_l++;
+    list_size++;
 }
 
 template <class T>
 void list<T>::pop_front() {
-    if (size_l == 0) {
-    } else if (size_l == 1) {
+    if (list_size == 0) {
+    } else if (list_size == 1) {
         delete first_ptr->next;
         delete first_ptr;
         first_ptr = NULL;
@@ -476,13 +467,13 @@ void list<T>::pop_front() {
         delete first_ptr->prev;
         first_ptr->prev = NULL;
     }
-    size_l--;
+    list_size--;
 }
 
 template <class T>
 void list<T>::pop_back() {
-    if (size_l == 0) {
-    } else if (size_l == 1) {
+    if (list_size == 0) {
+    } else if (list_size == 1) {
         delete first_ptr->next;
         delete first_ptr;
         first_ptr = NULL;
@@ -494,7 +485,7 @@ void list<T>::pop_back() {
         delete last_ptr;
         last_ptr = tmp;
     }
-    size_l--;
+    list_size--;
 }
 
 template <class T>
@@ -543,17 +534,15 @@ list<T>::list(size_t count) : list() {
 
 template <class T>
 list<T>::list(const list& other) : list() {
-    node* cur = other.first_ptr;
-    for (; cur != other.last_ptr->next; cur = cur->next) {
-        T value = cur->data;
-        push_back(value);
+    for (const auto& elem : other) {
+        push_back(elem);
     }
 }
 
 template <class T>
 list<T>& list<T>::operator=(const list& other) {
     clear();
-    size_l = 0;
+    list_size = 0;
     auto it = other.begin();
     while (it != other.end()) {
         push_back(*it);
@@ -564,7 +553,7 @@ list<T>& list<T>::operator=(const list& other) {
 
 template <class T>
 bool list<T>::empty() const {
-    return size_l == 0;
+    return list_size == 0;
 }
 template <class T>
 size_t list<T>::max_size() const {
@@ -573,42 +562,41 @@ size_t list<T>::max_size() const {
 
 template <class T>
 size_t list<T>::size() const {
-    return size_l;
+    return list_size;
 }
 
 template <class T>
 void list<T>::clear() {
-    while (size_l) pop_front();
+    while (list_size) pop_front();
 }
 template <class T>
 void list<T>::resize(size_t count) {
-    if (count == 0)
-        clear();
-    //    std::cout << size_l;
-    size_t diff = count - size_l;
-    if (count > size_l) {
+    if (count == 0) clear();
+
+    size_t diff = count - list_size;
+    if (count > list_size) {
         for (size_t i = 0; i < diff; ++i) push_back(T{});
     }
-    if (count < size_l) {
-        for (size_t i = 0; i < size_l - count; ++i) pop_back();
+    if (count < list_size) {
+        for (size_t i = 0; i < list_size - count; ++i) pop_back();
     }
 
-    size_l = count;
+    list_size = count;
 }
 
 template <class T>
 void list<T>::swap(list& other) {
     node* f_tmp = first_ptr;
     node* l_tmp = last_ptr;
-    size_t tmp_size = size_l;
+    size_t tmp_size = list_size;
 
     first_ptr = other.first_ptr;
     last_ptr = other.last_ptr;
-    size_l = other.size_l;
+    list_size = other.list_size;
 
     other.first_ptr = f_tmp;
     other.last_ptr = l_tmp;
-    other.size_l = tmp_size;
+    other.list_size = tmp_size;
 }
 
 template <class T>
@@ -616,12 +604,12 @@ void list<T>::sorted_insert(node* elem) {
     node* cur = first_ptr;
     if (cur == NULL) {
         first_ptr = last_ptr = elem;
-        node *cap = new node(T{});
+        node* cap = new node(T{});
         cap->next = NULL;
         cap->prev = last_ptr;
         first_ptr->prev = NULL;
         first_ptr->next = cap;
-        size_l++;
+        list_size++;
         return;
     }
     if (elem->data <= cur->data) {
@@ -629,7 +617,7 @@ void list<T>::sorted_insert(node* elem) {
         elem->next = cur;
         elem->prev = NULL;
         first_ptr = elem;
-        size_l++;
+        list_size++;
         return;
     }
 
@@ -640,8 +628,7 @@ void list<T>::sorted_insert(node* elem) {
             cur->next->prev = elem;
             cur->next = elem;
             last_ptr = elem;
-            //            std::cout << "hello" << std::endl;
-            size_l++;
+            list_size++;
             return;
         }
 
@@ -650,7 +637,7 @@ void list<T>::sorted_insert(node* elem) {
             elem->prev = cur->next->prev;
             cur->next->prev = elem;
             cur->next = elem;
-            size_l++;
+            list_size++;
             return;
         }
     }
@@ -668,12 +655,12 @@ void list<T>::merge(list& other) {
     }
     other.first_ptr = NULL;
     other.last_ptr = NULL;
-    other.size_l = 0;
+    other.list_size = 0;
 }
 
 template <class T>
 void list<T>::splice(const_iterator pos, list& other) {
-    size_l += other.size_l;
+    list_size += other.list_size;
     if (pos == begin()) {
         delete other.last_ptr->next;
         first_ptr->prev = other.last_ptr;
@@ -696,7 +683,7 @@ void list<T>::splice(const_iterator pos, list& other) {
 
     other.first_ptr = NULL;
     other.last_ptr = NULL;
-    other.size_l = 0;
+    other.list_size = 0;
 }
 template <class T>
 void list<T>::remove(const T& value) {
@@ -730,9 +717,7 @@ void list<T>::unique() {
             while (new_cur->next && (new_cur->data == new_cur->next->data)) {
                 new_cur = new_cur->next;
             }
-            auto it_beg = const_iterator(cur);
-            auto it_end = const_iterator(new_cur);
-            auto it_res = erase(it_beg, it_end);
+            auto it_res = erase(const_iterator(cur), const_iterator(new_cur));
             cur = it_res.cur;
         } else {
             cur = cur->next;
@@ -759,7 +744,7 @@ void list<T>::sort() {
 
     new_list.last_ptr = NULL;
     new_list.first_ptr = NULL;
-    new_list.size_l = 0;
+    new_list.list_size = 0;
 }
 
 }  // namespace task
