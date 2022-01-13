@@ -9,3 +9,7 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
 ENABLE_TESTING()
 
 ADD_SUBDIRECTORY(project)
+
+add_executable(matrix_library project/src/main.cpp project/src/matrix.cpp)
+
+include_directories(project/include project/src)
