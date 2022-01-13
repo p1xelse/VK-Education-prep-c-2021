@@ -3,13 +3,10 @@
 
 #include <stddef.h>
 
-#define COUNT_DIM 2
-
-
 typedef struct Matrix {
-  size_t n;
-  size_t m;
-  double **data;
+  size_t rows;
+  size_t cols;
+  double* data;
 } Matrix;
 
 // Init/release operations
@@ -36,8 +33,4 @@ int det(const Matrix* matrix, double* val);
 Matrix* adj(const Matrix* matrix);
 Matrix* inv(const Matrix* matrix);
 
-
-
-Matrix* create_matrix_without_col_row(const Matrix *matrix, size_t row, size_t col);
-// void print_matrix(Matrix *m);
 #endif  // PROJECT_INCLUDE_MATRIX_H_
