@@ -286,6 +286,6 @@ Matrix* inv(const Matrix* matrix) {
   Matrix* tmp = mul_scalar(adj_m, 1 / val);
   free_matrix(inv_matrix);
   free_matrix(adj_m);
-  
+
   return tmp;
 }
